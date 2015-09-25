@@ -12,6 +12,10 @@ shinyUI(fluidPage(
   radioButtons("additions", "Include line or smoother?",
                c("smoother"="smoother",
                  "line"="line")), 
+  numericInput("startyear", "Enter starting year (between 1996 and 2012)",
+    value=1996, min=1996, max=2012, step=1),
+  numericInput("endyear", "Enter ending year (between 1997 and 2013)",
+    value=2013, min=1997, max=2013, step=1),
   plotOutput("plot")
 ))
 
