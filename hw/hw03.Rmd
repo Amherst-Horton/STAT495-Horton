@@ -1,0 +1,107 @@
+---
+title: "STAT495 HW#3"
+author: "YOUR NAME HERE"
+date: "September 24, 2015"
+output: 
+  pdf_document:
+    fig_height: 3
+    fig_width: 5
+  html_document:
+    fig_height: 3
+    fig_width: 5
+  word_document:
+    fig_height: 3
+    fig_width: 5
+---
+
+
+```{r, include=FALSE}
+# Don't delete this chunk if you are using the mosaic package
+# This loads the mosaic and dplyr packages
+require(mosaic)
+```
+
+```{r, include=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+# This changes the default colors in lattice plots.
+trellis.par.set(theme=theme.mosaic())  
+
+# knitr settings to control how R chunks work.
+require(knitr)
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  size="small"    # slightly smaller font for code
+)
+
+```{r, include=FALSE}
+# Load additional packages here.  Uncomment the line below to use Project MOSAIC data sets.
+# require(mosaicData)   
+```
+
+### 1: airline delays
+
+Modify the sample code to access the airline delays data to answer the following question: what airports and airlines in the United States ran into trouble on January 26, 2015?  How do those delays compare to the previous week (January 19, 2015)?
+
+Your report should be no more than 2 pages of text with up to 2 additional tables and 3 figures.  Please pay particular attention to formatting of figures and tables.  
+
+```{r}
+library(mosaic)
+library(RMySQL)
+db <- src_mysql(host = "mysql-research.amherst.edu",
+                user = "math230", password = "math230pass", 
+                dbname = "math230")
+```
+
+```{r warning=FALSE}
+airports <- tbl(db, "airports")
+planes <- tbl(db, "planes")
+carriers <- tbl(db, "carriers")
+flights <- tbl(db, "flights")
+```
+
+```{r}
+aprilfools <-
+  flights %>% 
+  filter(month==1, day==1, year==2015)
+aprilfools <- data.frame(aprilfools)
+aprilfools <- aprilfools %>%
+  mutate(realdelay = ifelse(is.na(arr_delay), 240, arr_delay))
+favstats(~ arr_delay, data=aprilfools)
+sort(mean(cancelled ~ origin, data=aprilfools), decreasing=TRUE) %>% head(10)
+save(aprilfools, file="APRILFOOLS.Rda")  # load this in a different Rmd file to run your analyses
+```
+
+### 2: snowstorm insurance
+
+A company buys a policy to insure its revenue in the event of major snowstorms that shut down business. The policy pays nothing for the first such snowstorm of the year and 10,000 for each one thereafter, until the end of the year. The number of major snowstorms per year that shut down business is assumed to have a Poisson distribution with mean 1.5.  Find the analytic solution as well as an empirical estimate (be sure to use at least 10,000 simulations and provide a 99% confidence interval for your estimate).
+
+### 3: ISL exercise 3.15 (page 126)
+
+for part d) please be sure to comment on the results (in a single table).
+
+```{r}
+Boston <- MASS::Boston
+names(Boston)
+```
+
+Please pay particular attention to formatting.  See the following code chunks for examples (and see `https://cran.r-project.org/web/packages/xtable/vignettes/xtableGallery.pdf`).
+
+```{r}
+x <- rnorm(100)
+y <- 0.5 + 3*x + rnorm(100)
+mod <- lm(y ~ x)
+require(xtable)
+displaymod <- xtable(mod)
+digits(displaymod) <- 3
+```
+
+```{r results="asis"}
+displaymod
+```
+
+```{r results="asis"}
+options(xtable.comment = FALSE)
+table <- cbind(result1=c("Yes", "No"), result2=c("Maybe", "Yes"))
+xtable(table)
+```
