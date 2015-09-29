@@ -45,8 +45,8 @@ Let's resample a mean from a skewed distribution to see whether the coverage of 
 ```{r}
 require(mosaic)
 require(parallel)
-numsim <- 500  # number of simulations
-numboot <- 500  # number of bootstrap repetitions
+numsim <- 250  # number of simulations
+numboot <- 1000  # number of bootstrap repetitions
 n <- 25  # sample size
 ```
 
@@ -56,13 +56,14 @@ runresamp <- function(rate=1) {
   x <- rexp(n, rate=rate)
   res <- numeric(numsim)
   for (i in 1:numsim) {
-    res[i] <- median(resample(x))
+    res[i] <- mean(resample(x))
   }
   endpoints <- quantile(res, probs=c(.025, .975))
-  mean <- mean(x)
+  mymean <- mean(x)
   bottomnocover <- ifelse(endpoints[1] > rate, TRUE, FALSE)
   topnocover <- ifelse(endpoints[2] < rate, TRUE, FALSE)
-  return(data.frame(mean=mean, bottomnocover=bottomnocover, topnocover=topnocover))
+  return(data.frame(mean=mymean, bottomnocover=bottomnocover,
+                    topnocover=topnocover))
 }
 ```
 
@@ -73,12 +74,10 @@ Sys.time() - now
 ```
 
 ```{r}
-head(res)
+head(res, 8)
 tally(~ bottomnocover, format="proportion", data=res)
 tally(~ topnocover, format="proportion", data=res)
 res <- mutate(res, nocover = ifelse(bottomnocover | topnocover, "did not cover", "covered true"))
-  tally(~ nocover, format="proportion", data=res)
-
-tally(~ (topnocover & bottomnocover), format="proportion", data=res)
+tally(~ nocover, format="proportion", data=res)
 ```
 
