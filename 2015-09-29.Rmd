@@ -1,0 +1,84 @@
+---
+title: "STAT495 (Advanced Data Analysis)"
+author: "Nicholas Horton (nhorton@amherst.edu)"
+date: "September 29, 2015"
+output:
+  pdf_document:
+    fig_height: 3
+    fig_width: 5
+  html_document:
+    fig_height: 3
+    fig_width: 5
+  word_document:
+    fig_height: 3
+    fig_width: 5
+---
+
+
+```{r, include=FALSE}
+# Don't delete this chunk if you are using the mosaic package
+# This loads the mosaic and dplyr packages
+require(mosaic)
+```
+
+```{r, include=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+# This changes the default colors in lattice plots.
+trellis.par.set(theme=theme.mosaic())  
+
+# knitr settings to control how R chunks work.
+require(knitr)
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  size="small"    # slightly smaller font for code
+)
+```
+
+```{r, include=FALSE}
+# Load additional packages here.  Uncomment the line below to use Project MOSAIC data sets.
+# require(mosaicData)   
+```
+
+Let's resample a mean from a skewed distribution to see whether the coverage of a 95% confidence interval is at 95%.
+
+```{r}
+require(mosaic)
+require(parallel)
+numsim <- 500  # number of simulations
+numboot <- 500  # number of bootstrap repetitions
+n <- 25  # sample size
+```
+
+
+```{r}
+runresamp <- function(rate=1) {
+  x <- rexp(n, rate=rate)
+  res <- numeric(numsim)
+  for (i in 1:numsim) {
+    res[i] <- median(resample(x))
+  }
+  endpoints <- quantile(res, probs=c(.025, .975))
+  mean <- mean(x)
+  bottomnocover <- ifelse(endpoints[1] > rate, TRUE, FALSE)
+  topnocover <- ifelse(endpoints[2] < rate, TRUE, FALSE)
+  return(data.frame(mean=mean, bottomnocover=bottomnocover, topnocover=topnocover))
+}
+```
+
+```{r}
+now <- Sys.time()
+res <- do(numsim, parallel=TRUE)*runresamp()
+Sys.time() - now
+```
+
+```{r}
+head(res)
+tally(~ bottomnocover, format="proportion", data=res)
+tally(~ topnocover, format="proportion", data=res)
+res <- mutate(res, nocover = ifelse(bottomnocover | topnocover, "did not cover", "covered true"))
+  tally(~ nocover, format="proportion", data=res)
+
+tally(~ (topnocover & bottomnocover), format="proportion", data=res)
+```
+
