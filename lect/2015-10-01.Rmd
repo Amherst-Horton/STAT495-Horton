@@ -1,0 +1,137 @@
+---
+title: "STAT495 (Advanced Data Analysis)"
+author: "Nicholas Horton (nhorton@amherst.edu)"
+date: "September 29, 2015"
+output:
+  pdf_document:
+    fig_height: 3
+    fig_width: 5
+  html_document:
+    fig_height: 3
+    fig_width: 5
+  word_document:
+    fig_height: 3
+    fig_width: 5
+---
+
+
+```{r, include=FALSE}
+# Don't delete this chunk if you are using the mosaic package
+# This loads the mosaic and dplyr packages
+require(mosaic)
+```
+
+```{r, include=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+# This changes the default colors in lattice plots.
+trellis.par.set(theme=theme.mosaic())  
+
+# knitr settings to control how R chunks work.
+require(knitr)
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  size="small"    # slightly smaller font for code
+)
+```
+
+```{r, include=FALSE}
+# Load additional packages here.  Uncomment the line below to use Project MOSAIC data sets.
+# require(mosaicData)   
+```
+
+#### Warmup
+
+Suppose that $Y_1$ and $Y_2$ are uniformly distributed over the triangle defined by the points (1,0), (0, 1), and (-1, 0).  Using R, find P($Y_1 \leq 3/4, Y_2 \leq 3/4)$ and P($Y_1 - Y_2 \geq 0$).  
+
+SOLUTION:
+
+```
+
+
+
+
+```
+
+#### Simulation 1: find the power for milestone 1 
+
+Wild et al say that you should *make the call* if the median for one of the samples lies outside the box for the other sample.
+
+For a sample size of 20 observations from a normal distribution in each of the two groups, find the $\alpha$ level of this test.
+
+
+```{r}
+require(mosaic)
+require(parallel)
+numsim <- 500  # number of simulations
+testmilestone1 <- function(n=20, delta=0) {
+  y1 <- rnorm(n, mean=0, sd=1)
+  y2 <- rnorm(n, mean=delta, sd=1)
+  fivenum1 <- fivenum(y1); fivenum2 <- fivenum(y2)
+  if (fivenum1[3] > fivenum1[4]) {
+    result <- ifelse(fivenum1[3] > fivenum2[4], "make call", "no call")
+  } else {
+    result <- ifelse(fivenum2[3] > fivenum1[4], "make call", "no call")
+  }
+  return(result=result)
+}
+res <- do(numsim, parallel=TRUE)*testmilestone1()
+# tally(~ result, format="proportion", data=res)
+```
+
+Modify this code in the following ways to find the alpha level:
+
+1. Group 1: generate data from an exponential distribution rather than a normal
+2. Group 2: generate data from a uniform distribution rather than a normal
+3. Group 3: generate data from a normal but with n=50
+
+SOLUTION:
+
+```{r}
+
+
+```
+
+Modify this code in the following ways to find the power level:
+
+1. Group 1: set delta to 0.1
+2. Group 2: set delta to 0.1 but change the sample size to n=50
+3. Group 3: set delta to 0.1 but change the sample size to n=100
+
+```{r}
+
+
+```
+
+
+#### Simulation 2: missing data
+
+Let's consider a simple setting where $X_1$ is sometimes missing.
+```{r}
+set.seed(1982)
+n <- 1000
+x1 <- sample(0:1, n, replace=TRUE)
+x2 <- rnorm(n, mean=x1, sd=1)
+beta0 <- 2; beta1 <- 0.5; beta2 <- 1.5
+runsim <- function(missprop=0.2) {
+  y <- beta0 + beta1*x1 + beta2*x2 + rnorm(n, mean=0, sd=1)
+  uniform <- runif(n, min=0, max=1)
+  obsy <- ifelse(uniform < missprop, NA, y)
+  truemod <- lm(y ~ x1 + x2)
+  ccmod <- lm(obsy ~ x1 + x2)
+  truebeta0 <- coef(truemod)[1]; truebeta1 <- coef(truemod)[2]; truebeta2 <- coef(truemod)[3]
+  ccbeta0 <- coef(ccmod)[1]; ccbeta1 <- coef(ccmod)[2]; ccbeta2 <- coef(ccmod)[3]
+  return(data.frame(truebeta0, truebeta1, truebeta2, ccbeta0, ccbeta1, ccbeta2))
+}
+```
+
+```{r}
+set.rseed(1982)
+res <- do(20, parallel=TRUE)*runsim()    # change this to a larger value!
+head(res)
+```
+
+ASSIGNMENT: calculate the relative efficiency of the complete case estimator relative to the true model as a function of the proportion missing.
+
+
+
