@@ -74,7 +74,7 @@ testmilestone1 <- function(n=20, delta=0) {
   y1 <- rnorm(n, mean=0, sd=1)
   y2 <- rnorm(n, mean=delta, sd=1)
   fivenum1 <- fivenum(y1); fivenum2 <- fivenum(y2)
-  if (fivenum1[3] > fivenum2[4]) {
+  if (fivenum1[3] > fivenum2[3]) {
     result <- ifelse(fivenum1[3] > fivenum2[4], "make call", "no call")
   } else {
     result <- ifelse(fivenum2[3] > fivenum1[4], "make call", "no call")
