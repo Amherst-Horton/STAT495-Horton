@@ -46,11 +46,17 @@ Suppose that $Y_1$ and $Y_2$ are uniformly distributed over the triangle defined
 
 SOLUTION:
 
-```
-
-
-
-
+```{r}
+gentriangle <- function(n=10) {
+  x <- runif(n, min=0, max=1)
+  y <- runif(n, min=0, max=1)
+  flip <- ifelse(y > 1-x, TRUE, FALSE)
+  x <- ifelse(flip==TRUE, x-1, x)
+  y <- ifelse(flip==TRUE, 1-y, y)
+  return(data.frame(y1=x, y2=y))
+}
+y1y2 <- gentriangle(1000)
+xyplot(y2 ~ y1, data=y1y2)
 ```
 
 #### Simulation 1: find the power for milestone 1 
@@ -68,7 +74,7 @@ testmilestone1 <- function(n=20, delta=0) {
   y1 <- rnorm(n, mean=0, sd=1)
   y2 <- rnorm(n, mean=delta, sd=1)
   fivenum1 <- fivenum(y1); fivenum2 <- fivenum(y2)
-  if (fivenum1[3] > fivenum1[4]) {
+  if (fivenum1[3] > fivenum2[4]) {
     result <- ifelse(fivenum1[3] > fivenum2[4], "make call", "no call")
   } else {
     result <- ifelse(fivenum2[3] > fivenum1[4], "make call", "no call")
