@@ -1,0 +1,118 @@
+---
+title: "STAT495 (Advanced Data Analysis)"
+author: "Nicholas Horton (nhorton@amherst.edu)"
+date: "October 6, 2015"
+output:
+  pdf_document:
+    fig_height: 3
+    fig_width: 5
+  html_document:
+    fig_height: 3
+    fig_width: 5
+  word_document:
+    fig_height: 3
+    fig_width: 5
+---
+
+
+```{r, include=FALSE}
+# Don't delete this chunk if you are using the mosaic package
+# This loads the mosaic and dplyr packages
+require(mosaic)
+```
+
+```{r, include=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+# This changes the default colors in lattice plots.
+trellis.par.set(theme=theme.mosaic())  
+
+# knitr settings to control how R chunks work.
+require(knitr)
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  size="small"    # slightly smaller font for code
+)
+```
+
+```{r, include=FALSE}
+# Load additional packages here.  Uncomment the line below to use Project MOSAIC data sets.
+# require(mosaicData)   
+```
+
+#### Warmup
+
+Two people toss a fair coin 4 times each.  Find the probability that they throw equal numbers of heads.  Also stimate the probability that they throw equal numbers of heads using a simulation in R (with an associated 95% confidence interval for your estimate).  You may find the following code helpful.
+
+
+```{r}
+set.seed(1992)
+n <- 3
+do(n)*rflip(2)
+```
+
+SOLUTION:
+
+```
+
+
+
+
+
+
+
+```
+
+
+
+#### Bootstrapping
+
+You've just fit a regression model for testosterone levels as a function of age, household income, and BMI for male subjects in the NHANES study.
+
+```{r}
+require(NHANES)
+males <- filter(NHANES, Gender=="male")
+mod <- lm(Testosterone ~ Age + HHIncome + BMI, data=males)
+rsquared(mod)
+```
+
+Calculate a 95% confidence interval for the R-squared value (proportion of variance accounted for by the model)
+
+
+#### ISL 5.5 (page 198)
+
+In Chapter 4, we used logistic regression to predict the probability of default using income and balance on the `Default` data set. We will now estimate the test error of this logistic regression model using the validation set approach. Do not forget to set a random seed before beginning your analysis.
+
+a) Fit a logistic regression model that uses income and balance to predict default.
+
+```{r}
+require(ISLR)
+mymod <- glm(default ~ income + balance, family="binomial", data=Default)
+msummary(mymod)   # all observations
+```
+
+
+b) Using the validation set approach, estimate the test error of this model. In order to do this, you must perform the following steps:
+
+i. Split the sample set into a training set and a validation set.
+
+```{r}
+Default <- mutate(Default, 
+                  unif = runif(nrow(Default), min=0, max=1),
+                  group = ifelse(unif < .20, "test", "train"))
+test <- filter(Default, group=="test")
+train <- filter(Default, group=="train")
+dim(test)
+dim(train)
+```
+
+ii. Fit a multiple logistic regression model using only the training observations.
+
+iii. Obtain a prediction of default status for each individual in the validation set by computing the posterior probability of default for that individual, and classifying the individual to the default category if the posterior probability is greater than 0.5.
+
+iv. Compute the validation set error, which is the fraction of the observations in the validation set that are misclassified.
+
+c) Repeat the process in b) three times, using three different splits of the observations into a training set and a validation set. Comment on the results obtained.
+
+d) Now consider a logistic regression model that predicts the probability of default using income, balance, and a dummy variable for student. Estimate the test error for this model using the validation set approach. Comment on whether or not including a dummy variable for student leads to a reduction in the test error rate.
+
