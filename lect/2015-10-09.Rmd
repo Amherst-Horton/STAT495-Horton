@@ -1,0 +1,80 @@
+---
+title: "STAT495 (Advanced Data Analysis)"
+author: "Nicholas Horton (nhorton@amherst.edu)"
+date: "October 9, 2015"
+output:
+  pdf_document:
+    fig_height: 3
+    fig_width: 5
+  html_document:
+    fig_height: 3
+    fig_width: 5
+  word_document:
+    fig_height: 3
+    fig_width: 5
+---
+
+
+```{r, include=FALSE}
+# Don't delete this chunk if you are using the mosaic package
+# This loads the mosaic and dplyr packages
+require(mosaic)
+```
+
+```{r, include=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+# This changes the default colors in lattice plots.
+trellis.par.set(theme=theme.mosaic())  
+
+# knitr settings to control how R chunks work.
+require(knitr)
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  size="small"    # slightly smaller font for code
+)
+```
+
+```{r, include=FALSE}
+# Load additional packages here.  Uncomment the line below to use Project MOSAIC data sets.
+# require(mosaicData)   
+```
+
+
+#### Presentation
+
+#### Miniproject dataset choices
+
+#### LASSO
+
+Least absolute shrinkage and selection operator (due to Tibshirani)
+
+```{r message=FALSE}
+require(lars)
+data(diabetes)
+head(diabetes, 2)
+object1 <- with(diabetes, lars(x, y, type="lasso"))
+plot(object1)
+coef(object1)
+summary(object1)
+coef(object1)[8,]
+coef(object1)[9,]
+object2 <- with(diabetes, lars(x, y, type="forward.stagewise"))
+summary(object2)
+plot(object2)
+coef(object2)[8,]
+coef(object2)[9,]
+object3 <- with(diabetes, lars(x, y, type="stepwise"))
+summary(object3)
+plot(object3)
+coef(object3)[5,]
+coef(object3)[6,]
+```
+```
+
+INTERPRETATION:
+
+```
+
+
+```
