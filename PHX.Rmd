@@ -1,0 +1,129 @@
+SQL and R: a gentle introduction (activity at Phoenix airport)
+========================================================
+
+### Accessing the data from a server
+
+```{r,message=FALSE}
+require(mosaic)
+options(digits=3)
+trellis.par.set(theme=col.mosaic())
+
+require(RMySQL)
+con = dbConnect(MySQL(), user="math230", host="mysql-research.amherst.edu", password="math230pass", dbname="math230")
+
+```
+### Descriptive statistics
+
+```{r}
+dbGetQuery(con, "SELECT COUNT(*) as numFlights FROM ontime")
+```
+How many flights are in the database?
+
+SOLUTION:
+
+### Get more of a feel for the data and SQL operations
+```{r}
+dbGetQuery(con, "SELECT * FROM ontime LIMIT 10")
+```
+
+```{r}
+dbGetQuery(con, "SELECT DepTime, CRSDepTime, ArrTime, CRSArrTime, UniqueCarrier, ArrDelay, Origin, Dest FROM ontime LIMIT 10")
+```
+
+#### Let's take a look at Phoenix (PHX)
+```{r}
+ds =dbGetQuery(con, "SELECT Year, COUNT(*) as numFlights FROM ontime WHERE (Dest='PHX' OR Origin='PHX') GROUP BY Year")
+names(ds)
+xyplot(numFlights ~ Year, type="l", data=ds)
+```
+What do you observe about the change in the numbers of flights to Phoenix over time?  
+
+SOLUTION:
+
+#### Has this changed by season?
+
+```{r}
+ds =dbGetQuery(con, "SELECT Year, Month, COUNT(*) as numFlights FROM ontime WHERE ((Dest='PHX' OR Origin='PHX') AND (Year=1990 OR Year=2000 OR Year=2012)) GROUP BY Month, Year")
+names(ds)
+xyplot(numFlights ~ Month, groups=Year, auto.key = list(line = TRUE, columns=3), type=c("p", "l"), main="Flights to and from PHX by month", data=ds)
+```
+What do you observe about the seasonality of numbers of flights to Phoenix (and how that has changed over time)?  
+
+SOLUTION:
+
+#### Let's start to calculate some average arrival delays (which I say shouldn't include negative values)
+
+```{r}
+dbGetQuery(con, "SELECT ArrDelay, CASE WHEN (ArrDelay < 0) then 0 else ArrDelay end AS newdelay from ontime WHERE (Dest='PHX' OR Origin='PHX') LIMIT 20")
+```
+
+#### What flights were there from PHX to SFO on 10/8/2012?
+```{r}
+ds = dbGetQuery(con, "SELECT * FROM ontime WHERE (Origin='PHX' and Dest='SFO' AND Year=2012 AND Month=10 AND DayofMonth=8)")
+ds
+ds = dbGetQuery(con, "SELECT DepTime, CRSDepTime, ArrTime, CRSArrTime, UniqueCarrier, ArrDelay, Origin, Dest FROM ontime WHERE (Origin='PHX' and Dest='SFO' AND Year=2012 AND Month=10 AND DayofMonth=8)")
+ds
+densityplot(~ CRSDepTime| UniqueCarrier, data=ds)
+```
+```{r}
+ds = dbGetQuery(con, "SELECT * FROM carriers WHERE (code='WN' OR code='OO' or code='HP')")
+ds
+```
+What carriers service this route?  How often and when?
+
+SOLUTION:
+
+
+
+#### Calculate the average flight arrival time delay, by airline
+```{r}
+ds = dbGetQuery(con, "SELECT sum(1) as N, UniqueCarrier, Year, Month, DayofMonth, Dest, avg(if(ArrDelay< 0, 0, ArrDelay)) as AvgArrivalDelay FROM ontime WHERE (Origin='PHX' and Dest='SFO' AND Year=2012 AND Month=10 AND DayofMonth=8) GROUP BY UniqueCarrier")
+ds
+```
+Verify the calculation for SkyWest Airlines (UniqueCarrier 'OO')
+
+SOLUTION:
+
+#### Calculate the average delay per carrier on this route for every month in 2012
+
+Calculate the average flight arrival time delay, by airline
+```{r}
+ds = dbGetQuery(con, "SELECT UniqueCarrier, Year, Month, Dest, avg(CASE WHEN (ArrDelay < 0) then 0 else ArrDelay end) as AvgArrivalDelay FROM ontime WHERE (Origin='PHX' and Dest='SFO' AND Year=2012) GROUP BY Year,Month,UniqueCarrier")
+```
+
+```{r}
+favstats(~ AvgArrivalDelay, data=ds)
+densityplot(~AvgArrivalDelay, data=ds)
+favstats(AvgArrivalDelay ~ Month, data=ds)
+xyplot(AvgArrivalDelay ~ Month, groups=UniqueCarrier, type=c("l"), auto.key=TRUE,data=ds)
+bwplot(AvgArrivalDelay ~ as.factor(Month), data=ds)
+```
+Describe the distribution of average delay per month by airline.  Are there carrier effects?  Are there seasonal effects?
+
+SOLUTION:
+
+#### Compare this by month for 1998 and 2012
+
+Calculate the average flight arrival time delay, by airline
+```{r}
+ds = dbGetQuery(con, "SELECT UniqueCarrier, Year, Month, Dest, avg(CASE WHEN (ArrDelay < 0) then 0 else ArrDelay end) as AvgArrivalDelay FROM ontime WHERE (Origin='PHX' and Dest='SFO') AND (Year=2012 OR YEAR=1998) GROUP BY Year,Month,UniqueCarrier")
+ds
+```
+
+```{r}
+xyplot(AvgArrivalDelay ~ Month | as.factor(Year), groups=UniqueCarrier, type=c("l"), auto.key=TRUE,data=ds)
+bwplot(AvgArrivalDelay ~ as.factor(Month) | as.factor(Year), data=ds)
+```
+What changes do you observe over time?
+
+SOLUTION:
+
+### Open ended activity
+
+Now, with your neighbor, try to identify a question of interest with these data and start to craft the SQL code to create a dataset to explore it.  Note that some queries will be *slow* the first time you run them, so think about restricting to time and airport to start.
+
+Recall that you can run individual chunks using the *Chunks* menu which is located at the top right of the top left panel.  Be sure to run the first chunk to load mosaic and establish a connection to the server.
+```{r}
+# your new commands go here
+```
+
