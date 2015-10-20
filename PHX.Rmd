@@ -51,6 +51,7 @@ ds <- dbGetQuery(con, "SELECT year, COUNT(*) as numFlights FROM flights WHERE (d
 names(ds)
 xyplot(numFlights ~ year, type="l", data=ds)
 ```
+
 What do you observe about the change in the numbers of flights to Phoenix over time?  
 
 SOLUTION:
@@ -62,14 +63,17 @@ ds <- dbGetQuery(con, "SELECT year, month, COUNT(*) as numFlights FROM flights W
 names(ds)
 xyplot(numFlights ~ month, groups=year, auto.key = list(line = TRUE, columns=3), type=c("p", "l"), main="Flights to and from PHX by month", data=ds)
 ```
+
 What do you observe about the seasonality of numbers of flights to Phoenix (and how that has changed over time)?  
 
 SOLUTION:
 
-#### Let's start to calculate some average arrival delays (which I say shouldn't include negative values)
+#### Let's start to calculate some average arrival delays
+
+I assert that these shouldn't include negative values.
 
 ```{r avgdelay}
-dbGetQuery(con, "SELECT arr_delay, CASE WHEN (arr_delay < 0) then 0 else arr_delay end AS newdelay from flights WHERE (dest='PHX' OR origin='PHX') LIMIT 20")
+dbGetQuery(con, "SELECT arr_delay, CASE WHEN (arr_delay < 0) then 0 else arr_delay end AS newdelay from flights WHERE (dest='PHX' OR origin='PHX') LIMIT 10")
 ```
 
 #### What flights were there from PHX to SFO on 10/8/2012?
@@ -91,7 +95,7 @@ SOLUTION:
 
 
 #### Calculate the average flight arrival time delay, by airline
-```{r}
+```{r warning=FALSE}
 ds = dbGetQuery(con, "SELECT sum(1) as N, carrier, year, month, day, dest, avg(if(arr_delay< 0, 0, arr_delay)) as AvgArrivalDelay FROM flights WHERE (origin='PHX' and dest='SFO' AND year=2012 AND month=10 AND day=8) GROUP BY carrier")
 ds
 ```
@@ -102,7 +106,7 @@ SOLUTION:
 #### Calculate the average delay per carrier on this route for every month in 2012
 
 Calculate the average flight arrival time delay, by airline
-```{r}
+```{r warning=FALSE}
 ds = dbGetQuery(con, "SELECT carrier, year, month, dest, avg(CASE WHEN (arr_delay < 0) then 0 else arr_delay end) as AvgArrivalDelay FROM flights WHERE (origin='PHX' and dest='SFO' AND year=2012) GROUP BY year,month,carrier")
 ```
 
@@ -113,6 +117,7 @@ favstats(AvgArrivalDelay ~ month, data=ds)
 xyplot(AvgArrivalDelay ~ month, groups=carrier, type=c("l"), auto.key=TRUE,data=ds)
 bwplot(AvgArrivalDelay ~ as.factor(month), data=ds)
 ```
+
 Describe the distribution of average delay per month by airline.  Are there carrier effects?  Are there seasonal effects?
 
 SOLUTION:
@@ -120,15 +125,16 @@ SOLUTION:
 #### Compare this by month for 1998 and 2012
 
 Calculate the average flight arrival time delay, by airline
-```{r}
+```{r warning=FALSE}
 ds = dbGetQuery(con, "SELECT carrier, year, month, dest, avg(CASE WHEN (arr_delay < 0) then 0 else arr_delay end) as AvgArrivalDelay FROM flights WHERE (origin='PHX' and dest='SFO') AND (year=2012 OR year=1998) GROUP BY year,month,carrier")
-ds
+head(ds)
 ```
 
 ```{r}
 xyplot(AvgArrivalDelay ~ month | as.factor(year), groups=carrier, type=c("l"), auto.key=TRUE,data=ds)
 bwplot(AvgArrivalDelay ~ as.factor(month) | as.factor(year), data=ds)
 ```
+
 What changes do you observe over time?
 
 SOLUTION:
@@ -138,6 +144,9 @@ SOLUTION:
 Now, with your neighbor, try to identify a question of interest with these data and start to craft the SQL code to create a dataset to explore it.  Note that some queries will be *slow* the first time you run them, so think about restricting to time and airport to start.
 
 Recall that you can run individual chunks using the *Chunks* menu which is located at the top right of the top left panel.  Be sure to run the first chunk to load mosaic and establish a connection to the server.
+
+If you do rerun the markdown file, I'd suggest setting the `phx` chunk to be `eval=FALSE` to speed your operations.
+
 ```{r}
 # your new commands go here
 ```
