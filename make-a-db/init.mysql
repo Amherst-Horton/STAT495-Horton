@@ -1,8 +1,8 @@
 # Load the airline delays data into MySQL
 
-# USE airlines;
-
 CREATE DATABASE airlines;
+
+USE airlines;
 
 DROP TABLE IF EXISTS flights;
 
@@ -30,6 +30,36 @@ CREATE TABLE flights (
   KEY `Carrier` (`carrier`),
   KEY `tailNum` (`tailNum`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1
+  PARTITION BY LIST (Year) (
+    PARTITION p1 VALUES IN (1987),
+    PARTITION p2 VALUES IN (1988),
+    PARTITION p3 VALUES IN (1989),
+    PARTITION p4 VALUES IN (1990),
+    PARTITION p5 VALUES IN (1991),
+    PARTITION p6 VALUES IN (1992),
+    PARTITION p7 VALUES IN (1993),
+    PARTITION p8 VALUES IN (1994),
+    PARTITION p9 VALUES IN (1995),
+    PARTITION p10 VALUES IN (1996),
+    PARTITION p11 VALUES IN (1997),
+    PARTITION p12 VALUES IN (1998),
+    PARTITION p13 VALUES IN (1999),
+    PARTITION p14 VALUES IN (2000),
+    PARTITION p15 VALUES IN (2001),
+    PARTITION p16 VALUES IN (2002),
+    PARTITION p17 VALUES IN (2003),
+    PARTITION p18 VALUES IN (2004),
+    PARTITION p19 VALUES IN (2005),
+    PARTITION p20 VALUES IN (2006),
+    PARTITION p21 VALUES IN (2007),
+    PARTITION p22 VALUES IN (2008),
+    PARTITION p23 VALUES IN (2009),
+    PARTITION p24 VALUES IN (2010),
+    PARTITION p25 VALUES IN (2011),
+    PARTITION p26 VALUES IN (2012),
+    PARTITION p27 VALUES IN (2013),
+    PARTITION p28 VALUES IN (2014),
+    PARTITION p29 VALUES IN (2015)
 );
 
 DROP TABLE IF EXISTS carriers;
@@ -70,8 +100,39 @@ CREATE TABLE `planes` (
   PRIMARY KEY (`tailnum`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
+DROP TABLE IF EXISTS weather;
+
+CREATE TABLE `weather` (
+  `origin` text,
+  `year` double DEFAULT NULL,
+  `month` double DEFAULT NULL,
+  `day` int(11) DEFAULT NULL,
+  `hour` int(11) DEFAULT NULL,
+  `temp` double DEFAULT NULL,
+  `dewp` double DEFAULT NULL,
+  `humid` double DEFAULT NULL,
+  `wind_dir` double DEFAULT NULL,
+  `wind_speed` double DEFAULT NULL,
+  `wind_gust` double DEFAULT NULL,
+  `precip` double DEFAULT NULL,
+  `pressure` double DEFAULT NULL,
+  `visib` double DEFAULT NULL,
+  `date` datetime DEFAULT NULL,
+  KEY `year_idx` (`year`),
+  KEY `date_widx` (`date`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 
 DROP VIEW IF EXISTS summary;
 CREATE VIEW summary AS 
-  SELECT year, sum(1) as numFlights FROM flights GROUP BY year;
+SELECT year, count(distinct month) as numMonths
+, sum(1) as numFlights
+, sum(1) / count(distinct concat(month, '-', day)) as avgFlightsPerDay
+, count(distinct carrier) as numCarriers
+, count(distinct origin) as numOrigins
+FROM flights
+GROUP BY year;
+
+LOAD FILE INFILE 'plane-data.csv' INTO TABLE planes;
+
+LOAD DATA LOCAL INFILE 'plane-data.csv' INTO TABLE planes FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 LINES;
