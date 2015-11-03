@@ -48,15 +48,15 @@ page <- GET(myurl)
 x <- text_content(page)
 tab <- sub('.*(<table class="grid".*?>.*</table>).*', '\\1', x)
 result <- readHTMLTable(tab)
-mytable = result[[2]]
+mytable = result[[1]]
 names(mytable)
 str(mytable)
 ```
 
 ```{r}
-require(dplyr)
+require(dplyr); require(tidyr)
 finaltable = mytable %>%
-  mutate(year = as.numeric(Year), city="Liverpool") %>%
+  mutate(year = extract_numeric(Year), city="Liverpool") %>%
   select(year, Title, city) %>%
   arrange(year)
 head(finaltable, 8)
