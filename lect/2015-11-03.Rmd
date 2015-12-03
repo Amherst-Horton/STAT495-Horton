@@ -1,0 +1,73 @@
+---
+title: "STAT495: Data scraping"
+author: "Nicholas Horton (nhorton@amherst.edu)"
+date: "November 3, 2015"
+output:
+  pdf_document:
+    fig_height: 3
+    fig_width: 5
+  html_document:
+    fig_height: 3
+    fig_width: 5
+  word_document:
+    fig_height: 3
+    fig_width: 5
+---
+
+
+```{r include=FALSE}
+# Don't delete this chunk if you are using the mosaic package
+# This loads the mosaic and dplyr packages
+require(mosaic)
+```
+
+```{r include=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+# This changes the default colors in lattice plots.
+trellis.par.set(theme=theme.mosaic())  
+
+# knitr settings to control how R chunks work.
+require(knitr)
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  size="small"    # slightly smaller font for code
+)
+```
+
+
+```{r message=FALSE}
+require(XML)
+require(httr)
+require(mosaic)
+
+wikipedia = "https://en.wikipedia.org/wiki"
+liverpool = "List_of_films_and_television_shows_set_or_shot_in_Liverpool"
+myurl <- paste(wikipedia, liverpool, sep="/")
+page <- GET(myurl)
+x <- text_content(page)
+tab <- sub('.*(<table class="grid".*?>.*</table>).*', '\\1', x)
+result <- readHTMLTable(tab)
+mytable = result[[1]]
+names(mytable)
+str(mytable)
+```
+
+```{r}
+require(dplyr); require(tidyr)
+finaltable = mytable %>%
+  mutate(year = extract_numeric(Year), city="Liverpool") %>%
+  select(year, Title, city) %>%
+  arrange(year)
+head(finaltable, 8)
+favstats(~ year, data=finaltable)
+```
+
+```{r}
+with(finaltable, stem(year, scale=3))
+```
+
+### YOUR MISSION
+
+In groups of 2, find an interesting Wikipedia page with a table, scrape the data from it, and generate a figure that tells an interesting story.
+

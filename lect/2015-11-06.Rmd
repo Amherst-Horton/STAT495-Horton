@@ -1,0 +1,141 @@
+---
+title: "All questions answered"
+author: 'Nicholas Horton (nhorton@amherst.edu)'
+date: 'November 6, 2015'
+output:
+  pdf_document:
+    fig_height: 3
+    fig_width: 5
+  html_document:
+    fig_height: 3
+    fig_width: 5
+  word_document:
+    fig_height: 3
+    fig_width: 5
+---
+
+
+```{r include=FALSE}
+# Don't delete this chunk if you are using the mosaic package
+# This loads the mosaic and dplyr packages
+require(mosaic)
+```
+
+```{r include=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+# This changes the default colors in lattice plots.
+trellis.par.set(theme=theme.mosaic())  
+
+# knitr settings to control how R chunks work.
+require(knitr)
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  size="small"    # slightly smaller font for code
+)
+```
+
+### All questions answered
+
+#### 1
+
+I'm still confused about the difference between different splines and interpretation of coefficients.
+
+RESPONSE:
+
+```
+
+
+```
+
+#### 2
+
+For the Emily Dickinson poems are the poems listed in categories or is there any way to sort them?
+
+RESPONSE: 
+
+```
+
+
+
+```
+
+#### 3
+
+Why did SQL not work for me?  I'm still a little confused about how to set up a local database.
+
+RESPONSE:
+
+```
+
+
+```
+
+#### 4
+
+If I were to try and scrape data from another website, would I use the same/similar code to scrape or would there be a different set of commands needed?
+
+RESPONSE: 
+
+```
+
+
+```
+
+#### 5
+
+If there are pictures in the table, how can we just extract the required columns from the table? Is it possible to extract pictures as well?
+
+RESPONSE:
+
+```
+
+
+```
+
+#### 6
+
+You mentioned that someone on stack overflow helped you with your code. How exactly does that work? Do you need to give someone credit for helping you?
+
+RESPONSE:
+
+```{r message=FALSE}
+require(httr)
+# Find the most recent R questions on stackoverflow
+getresult = GET("http://api.stackexchange.com", path="questions",
+  query=list(site="stackoverflow.com", tagged="dplyr"))
+stop_for_status(getresult) # Ensure returned without error
+questions = content(getresult)  # Grab content
+```
+
+```{r}
+names(questions$items[[1]])    # What does the returned data look like?
+substr(questions$items[[1]]$title, 1, 68)
+substr(questions$items[[2]]$title, 1, 68)
+substr(questions$items[[3]]$title, 1, 68)
+```
+
+
+#### 7
+
+Can we go through biplot again in more detail? From my understanding, points are observations and variables are represented by vectors. But I'm not sure about how the vectors are determined and what their meanings are.
+
+RESPONSE:
+
+```
+
+```
+
+#### 8
+
+I still have questions about hexbinning.
+
+RESPONSE:
+
+```{r message=FALSE}
+require(hexbin)
+require(NHANES)
+with(NHANES, plot(hexbin(TotChol, UrineVol1)))
+```
+
+

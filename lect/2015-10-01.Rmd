@@ -69,7 +69,7 @@ For a sample size of 20 observations from a normal distribution in each of the t
 ```{r}
 require(mosaic)
 require(parallel)
-numsim <- 500  # number of simulations
+numsim <- 2000  # number of simulations
 testmilestone1 <- function(n=20, delta=0) {
   y1 <- rnorm(n, mean=0, sd=1)
   y2 <- rnorm(n, mean=delta, sd=1)
@@ -82,7 +82,7 @@ testmilestone1 <- function(n=20, delta=0) {
   return(result=result)
 }
 res <- do(numsim, parallel=TRUE)*testmilestone1()
-# tally(~ result, format="proportion", data=res)
+tally(~ result, format="proportion", data=res)
 ```
 
 Modify this code in the following ways to find the alpha level:
@@ -133,8 +133,10 @@ runsim <- function(missprop=0.2) {
 
 ```{r}
 set.rseed(1982)
-res <- do(20, parallel=TRUE)*runsim()    # change this to a larger value!
+res <- do(2000, parallel=TRUE)*runsim()    # change this to a larger value!
 head(res)
+favstats(~ truebeta1, data=res)
+favstats(~ ccbeta1, data=res)
 ```
 
 ASSIGNMENT: calculate the relative efficiency of the complete case estimator relative to the true model as a function of the proportion missing.
