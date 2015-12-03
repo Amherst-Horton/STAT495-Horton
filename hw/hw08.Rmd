@@ -39,7 +39,7 @@ opts_chunk$set(
 # require(mosaicData)   
 ```
 
-This homework is due at midnight on Tuesday, December 3rd (one report per pair). Please add, commit, and push the Rmd and pdf files to your public github repository as well as create and then close an issue for "HW#8".  Your task is to improve upon your model from HW#6, in conjunction with your partner.
+This homework is due at midnight on Tuesday, December 8th (one report per pair). Please add, commit, and push the Rmd and pdf files to your public github repository as well as create and then close an issue for "HW#8".  Your task is to improve upon your model from HW#6, in conjunction with your partner.
 
 The files for this assignment can be found in the `STAT495-Horton` github repository (called `hw08.Rda`).  This is a slightly modified dataset: fewer stores, no days with zero sales, and no missing values.
 
