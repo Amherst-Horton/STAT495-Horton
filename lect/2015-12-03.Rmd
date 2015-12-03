@@ -1,0 +1,132 @@
+---
+title: "STAT495: Bagging and boosting"
+author: 'Nicholas Horton (nhorton@amherst.edu)'
+date: 'December 3, 2015'
+output:
+  pdf_document:
+    fig_height: 3.8
+    fig_width: 6
+  html_document:
+    fig_height: 3
+    fig_width: 5
+  word_document:
+    fig_height: 3
+    fig_width: 5
+---
+
+
+```{r include=FALSE}
+# Don't delete this chunk if you are using the mosaic package
+# This loads the mosaic and dplyr packages
+require(mosaic); require(tree); require(randomForest)
+```
+
+```{r include=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+# This changes the default colors in lattice plots.
+trellis.par.set(theme=theme.mosaic())  
+
+# knitr settings to control how R chunks work.
+require(knitr)
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  size="small"    # slightly smaller font for code
+)
+```
+
+### ISL chapter 8
+
+#### regression tree (page 327)
+
+Let's fit a regression tree to the Boston data (see page 110 for a description).
+
+```
+Boston: This data frame contains the following columns:
+
+crim: per capita crime rate by town.
+zn: proportion of residential land zoned for lots over 25,000 sq.ft.
+indus: proportion of non-retail business acres per town.
+chas: Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
+nox: nitrogen oxides concentration (parts per 10 million).
+rm: average number of rooms per dwelling.
+age: proportion of owner-occupied units built prior to 1940.
+dis: weighted mean of distances to five Boston employment centres.
+rad: index of accessibility to radial highways.
+tax: full-value property-tax rate per \$10,000.
+ptratio: pupil-teacher ratio by town.
+black: 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town.
+lstat: lower status of the population (percent).
+medv: median value of owner-occupied homes in \$1000s.
+```
+
+```{r}
+require(tree)
+Boston <- MASS::Boston
+set.seed(1)
+train <- sample(1:nrow(Boston), nrow(Boston)/2)
+tree.boston <- tree(medv ~ ., Boston, subset=train)
+summary(tree.boston)
+```
+
+```{r}
+plot(tree.boston)
+text(tree.boston, pretty=0, cex=0.7)
+```
+
+```{r}
+cv.boston <- cv.tree(tree.boston)
+xyplot(dev ~ size, type="b", data=cv.boston)
+```
+
+```{r}
+prune.boston <- prune.tree(tree.boston, best=5)
+plot(prune.boston)
+text(prune.boston, pretty=0)
+```
+
+```{r fig.keep='last'}
+yhat <- predict(tree.boston, newdata=Boston[-train,])
+boston.test <- Boston[-train, "medv"]
+xyplot(boston.test ~ yhat)
+ladd(panel.abline(0, 1))
+mean((yhat - boston.test)^2)
+```
+
+#### Bagging 
+
+page 328
+
+```{r fig.keep='last'}
+require(randomForest)
+set.seed(1)
+bag.boston <- randomForest(medv ~., data=Boston, subset=train, 
+      mtry=13, importance=TRUE)
+bag.boston
+yhat.bag <- predict(bag.boston, newdata=Boston[-train,])
+xyplot(boston.test ~ yhat.bag)
+ladd(panel.abline(0, 1))
+mean((yhat.bag - boston.test)^2)
+```
+
+```{r}
+importance(bag.boston)
+varImpPlot(bag.boston)
+```
+
+#### Random forests
+
+page 329
+
+```{r}
+set.seed(1)
+rf.boston <- randomForest(medv ~ ., data=Boston, subset=train, mtry=6, importance=TRUE)
+yhat.rf <- predict(rf.boston, newdata=Boston[-train,])
+mean((yhat.rf - boston.test)^2)
+```
+
+```{r}
+importance(rf.boston)
+varImpPlot(rf.boston)
+```
+
