@@ -1,0 +1,89 @@
+---
+title: "STAT495 HW#8"
+author: "YOUR NAME HERE"
+date: "December 3, 2015"
+output: 
+  pdf_document:
+    fig_height: 3
+    fig_width: 5
+  html_document:
+    fig_height: 3
+    fig_width: 5
+  word_document:
+    fig_height: 3
+    fig_width: 5
+---
+
+
+```{r, include=FALSE}
+# Don't delete this chunk if you are using the mosaic package
+# This loads the mosaic and dplyr packages
+require(mosaic)
+```
+
+```{r, include=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+
+# This changes the default colors in lattice plots.
+trellis.par.set(theme=theme.mosaic())  
+
+# knitr settings to control how R chunks work.
+require(knitr)
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  size="small"    # slightly smaller font for code
+)
+
+```{r, include=FALSE}
+# Load additional packages here.  Uncomment the line below to use Project MOSAIC data sets.
+# require(mosaicData)   
+```
+
+This homework is due at midnight on Tuesday, December 3rd (one report per pair). Please add, commit, and push the Rmd and pdf files to your public github repository as well as create and then close an issue for "HW#8".  Your task is to improve upon your model from HW#6, in conjunction with your partner.
+
+The files for this assignment can be found in the `STAT495-Horton` github repository (called `hw08.Rda`).  This is a slightly modified dataset: fewer stores, no days with zero sales, and no missing values.
+
+It will be important to control for store in your model.  
+
+
+```{r}
+load("hw08.Rda")
+glimpse(merged)
+mod1 <- lm(sales ~ customers + promotion  + noschool + type + distance, data=merged)
+msummary(mod1)
+sqrt(mean((predict(mod1) - merged$sales)^2))
+# another (better) model
+mod2 <- lm(sales ~ as.factor(store) + customers + promotion  + noschool + type + distance, data=merged)
+msummary(mod2)
+sqrt(mean((predict(mod2) - merged$sales)^2))
+```
+
+Use this code as a starting point along with your two draft answers for HW#6 to improve anwers to the following questions.  
+
+### Predicting sales
+
+You've been promoted to a new position that gives you responsibility for monitoring sales at a chain of stores.  Your goal is to predict sales at the store level.  Data fields that are available include the `store`, `sales` (in dollars), `customers` (number of customers), `storeopen` (whether the store was open that day), `promotion` (whether there was a sale on), `noschool` (whether there was school that day), `type` (type of store: 4 levels), and `distance` (distance to nearest competitor).  
+
+#### Part one
+
+Part one of your challenge is to generate a model for sales that will be used to predict sales for future months.  Your R Markdown file should generate a model called `finalmod()` which I will use to generate predicted values and calculate test error.
+
+SOLUTION:
+
+#### Part two
+
+Part two of your challenge is to interpret your model: what do you conclude about predictors of sales?
+
+SOLUTION:
+
+#### Part three
+
+Part three of your challenge is to assess your model: how well does it work for the training data?
+
+SOLUTION:
+
+#### Visualizing patterns of sales
+
+In addition to your predictive model, please generate one visualization of the data that tells a story related to sales.  Please pay particular attention to the quality of your visualization.  You should include a single paragraph interpretation of the figure.
+
+SOLUTION:
