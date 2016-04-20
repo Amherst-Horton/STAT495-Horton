@@ -1,0 +1,255 @@
+---
+title: "X2 Missing, No Interaction, Correlated Simulation Complete Case, MICE"
+author: "Nicholas Horton (nhorton@amherst.edu)"
+date: "April 20, 2016"
+output: pdf_document
+---
+
+### Overview
+
+Assuming $X_1$ quantitative, $X_2$ dichotomous
+$X_1|X_2$ normally distributed with mean $X_2$ and $\sigma = 1$. 
+
+
+```{r,include=FALSE}
+require(mosaic)
+require(mice)
+require(xtable)
+options(xtable.comment=FALSE)
+```
+
+#### Setting up the simulation
+```{r setup}
+#set the number of numeration & sample size
+numsim <- 250
+n <- 200
+
+#true coefficients, mse, set proportion of data missing
+#probabilities for x3: .5, .3, .1, .1
+beta0 <- 0.5; beta1 <- 1.5; beta2 <- -1
+mse <- 2
+propmiss <- .3
+probx1 <- .4
+
+```
+#### Creating results vectors
+```{r regparameters}
+#parameters for original non-missing data
+trueint <- rep(NA, numsim)
+truex1 <- rep(NA,numsim) 
+truex2 <- rep(NA, numsim) 
+
+msetrueint <- rep(NA, numsim)
+relbiastrueint <- rep(NA, numsim)
+msetruex1 <- rep(NA, numsim)
+relbiastruex1 <- rep(NA, numsim)
+msetruex2 <- rep(NA, numsim)
+relbiastruex2 <- rep(NA, numsim)
+
+#parameters for complete case
+ccint <- rep(NA, numsim)
+ccx1 <- rep(NA,numsim) 
+ccx2 <- rep(NA, numsim) 
+
+mseccint <- rep(NA, numsim)
+relbiasccint <- rep(NA, numsim)
+mseccx1 <- rep(NA, numsim)
+relbiasccx1 <- rep(NA, numsim)
+mseccx2 <- rep(NA, numsim)
+relbiasccx2 <- rep(NA, numsim)
+
+#parameters for mice1 (default)
+mice1int <- rep(NA, numsim)
+mice1x1 <- rep(NA,numsim) 
+mice1x2 <- rep(NA, numsim) 
+
+msemice1int <- rep(NA, numsim)
+relbiasmice1int <- rep(NA, numsim)
+msemice1x1 <- rep(NA, numsim)
+relbiasmice1x1 <- rep(NA, numsim)
+msemice1x2 <- rep(NA, numsim)
+relbiasmice1x2 <- rep(NA, numsim)
+
+```
+#### Storing coefficients
+These results are not included in PDF, but shown in Rmd file.
+```{r coefforloop, include=FALSE}
+
+set.seed(202)
+simforloop <- for (i in 1:numsim) {
+  #generate complete dataset
+  x2 <- rbinom(n, 1, prob=probx1)
+  x1 <- rnorm(n,mean=x2, 1)
+  
+  #store true coefficients
+  y <- beta0 + beta1*x1 + beta2*x2 + rnorm(n, 0, mse) 
+  mod <- lm(y ~ x1 + x2) 
+
+  coefs <- coef(mod)
+  trueint[i] <- coefs[1]
+  truex1[i] <- coefs[2]
+  truex2[i] <- coefs[3]
+  
+  relbiastrueint[i] <- trueint[i] - beta0
+  relbiastruex1[i] <- truex1[i] - beta1
+  relbiastruex2[i] <- truex2[i] - beta2
+  
+  # impose missingness
+  unif <- runif(n)
+  cutoff <- x2*propmiss + propmiss/2  # P(missing = propmiss/2 for x2=0, 3*promiss/2 for x2=1)
+  missind <- unif < cutoff
+  x1miss <- x1
+  x1miss[missind==0]=NA # adds missingness to x1
+  ds <- data.frame(y,x1miss,x2)
+
+  #fit cc
+  cc <- lm(y ~ x1miss + x2, na.action=na.omit, data=ds)
+
+  cccoefs <- coef(cc)
+  ccint[i] <- cccoefs[1]
+  ccx1[i] <- cccoefs[2]
+  ccx2[i] <- cccoefs[3]
+  
+  relbiasccint[i] <- ccint[i] - beta0
+  relbiasccx1[i] <- ccx1[i] - beta1
+  relbiasccx2[i] <- ccx2[i] - beta2
+  
+
+   
+  #fit mice1 (default, logistic regression)
+  imp <- mice(ds, m=15, maxit=15,seed=NA)
+  mice1results <- summary(pool(glm.mids(y~ x1miss + x2,family=gaussian, data=imp)))
+  mice1int[i] <- mice1results[1,1]
+  mice1x1[i] <- mice1results[2,1]
+  mice1x2[i] <- mice1results[3,1]
+  
+  relbiasmice1int[i] <- mice1int[i] - beta0
+  relbiasmice1x1[i] <- mice1x1[i] - beta1
+  relbiasmice1x2[i] <- mice1x2[i] - beta2
+}
+```
+
+#Calculating MSE
+
+```{r}
+msetrueint <- var(trueint) + relbiastrueint^2
+msetruex1 <- var(truex1) + relbiastruex1^2
+msetruex2 <- var(truex2) + relbiastruex2^2
+
+mseccint <- var(ccint) + relbiasccint^2
+mseccx1 <- var(ccx1) + relbiasccx1^2
+mseccx2 <- var(ccx2) + relbiasccx2^2
+
+msemice1int <- var(mice1int) + relbiasmice1int^2
+msemice1x1 <- var(mice1x1) + relbiasmice1x1^2
+msemice1x2 <- var(mice1x2) + relbiasmice1x2^2
+```
+
+
+# Saving Coefficients
+
+Not included in PDF, but shown in Rmd file.
+```{r storecoef, include=FALSE}
+#true case
+
+mtrue <- matrix(c(mean(trueint), sd(trueint),
+mean(truex1), sd(truex1),
+mean(truex2), sd(truex2)),byrow=TRUE, nrow=3,ncol=2)
+colnames(mtrue) <- c("Mean", "Standard Deviation")
+rownames(mtrue) <- c("Intercept", "x1", "x2")
+
+mtrue
+
+save(trueint, truex1, truex2, mtrue, 
+     file="RESULTS-true.Rda")
+
+
+#complete case
+mcc <- matrix(c(mean(ccint), sd(ccint), 
+mean(ccx1), sd(ccx1),
+mean(ccx2), sd(ccx2)), byrow=TRUE, nrow=3, ncol=2)
+colnames(mcc) <- c("Mean", "Standard Deviation")
+rownames(mcc) <- c("Intercept", "x1", "x2")
+
+mcc
+
+save(ccint, ccx1, ccx2, mcc, file="RESULTS-cc.Rda")
+
+
+#mice1 (default)
+mmice1 <- matrix(c(mean(mice1int), sd(mice1int), 
+mean(mice1x1), sd(mice1x1),
+mean(mice1x2), sd(mice1x2)), byrow=TRUE, nrow=3, ncol=2)
+colnames(mmice1) <- c("Mean", "Standard Deviation")
+rownames(mmice1) <- c("Intercept", "x1", "x2")
+
+mmice1
+
+
+save(mice1int, mice1x1, mice1x2, mmice1,
+     file="RESULTS-mice.Rda")
+
+```
+
+# Bias and MSE
+```{r storebiasmse, include=FALSE}
+#intercept
+mintbias <- matrix(c(mean(relbiastrueint), mean(msetrueint),
+  mean(relbiasccint), mean(mseccint),
+  mean(relbiasmice1int), mean(msemice1int)), byrow=TRUE, nrow=3, ncol=2)
+colnames(mintbias) <- c("Relative Bias", "MSE")
+rownames(mintbias) <- c("True", "CC", "MICE")
+
+mintbias
+
+#x1
+mx1bias <- matrix(c(mean(relbiastruex1), mean(msetruex1),
+  mean(relbiasccx1), mean(mseccx1), 
+  mean(relbiasmice1x1), mean(msemice1x1)), byrow=TRUE, nrow=3, ncol=2)
+colnames(mx1bias) <- c("Relative Bias", "MSE")
+rownames(mx1bias) <- c("True", "CC", "MICE")
+
+mx1bias
+
+#x2
+mx2bias <- matrix(c(mean(relbiastruex2), mean(msetruex2), 
+  mean(relbiasccx2), mean(mseccx2),
+  mean(relbiasmice1x2), mean(msemice1x2)), byrow=TRUE, nrow=3, ncol=2)
+colnames(mx2bias) <- c("Relative Bias", "MSE")
+rownames(mx2bias) <- c("True", "CC", "MICE")
+
+mx2bias
+
+
+
+
+save(mintbias,mx1bias, mx2bias, file="RESULTS-biasmse.Rda")
+```
+
+
+```{r biasvisual}
+mtrue
+mcc
+mmice1
+
+mintbias
+mx1bias
+mx2bias
+```
+
+#### Simulation study results for one iteration
+```{r truetable, results="asis"}
+xmod <- xtable(mod, caption = "Truth (no missingness)", digits=3)
+xmod
+```
+
+```{r cctable,results="asis", warning=FALSE}
+xcc <- xtable(cc, caption = "CC", digits=3)
+xcc
+```
+
+
+```{r mice1table,results="asis"}
+xmice1 <- xtable(mice1results, caption = "Default MICE", digits=3)
+xmice1
+```
